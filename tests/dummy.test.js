@@ -1,14 +1,14 @@
 const listHelper = require('../utils/list_helper')
 
 
-test('dummy returns one', () => {
+test('dummy returns one', async () => {
   const blogs = []
 
-  const result = listHelper.dummy(blogs)
+  const result = await listHelper.dummy(blogs)
   expect(result).toBe(1)
 })
 
-describe('total likes', () => {
+describe('total likes', async () => {
     const listWithOneBlog = [
       {
         _id: '5a422aa71b54a676234d17f8',
@@ -92,39 +92,39 @@ describe('total likes', () => {
       
       
   
-    test('when list has only one blog, equals the likes of that', () => {
-      const result = listHelper.totalLikes(listWithOneBlog)
+    test('when list has only one blog, equals the likes of that', async () => {
+      const result = await listHelper.totalLikes(listWithOneBlog)
       expect(result).toBe(5)
     })
 
-    test('when list has two blogs, equals the likes of that', () => {
-        const result = listHelper.totalLikes(listWithTwoBlogs)
+    test('when list has two blogs, equals the likes of that', async () => {
+        const result = await listHelper.totalLikes(listWithTwoBlogs)
         expect(result).toBe(12)
       })
 
-    test('check which blog has the most likes', () => {
+    test('check which blog has the most likes', async () => {
       expected = {
             likes: 12
       }
-      const result = listHelper.favoriteBlog(blogs)
+      const result = await listHelper.favoriteBlog(blogs)
       expect(result.likes).toEqual(expected.likes)
     })
 
-    test('check the author with the most blogs',()=> {
+    test('check the author with the most blogs', async ()=> {
       expected = {
         author: "Robert C. Martin",
         blogs: 3
       }
-      const result = listHelper.mostBlogs(blogs)
+      const result = await listHelper.mostBlogs(blogs)
       expect(result).toEqual(expected)
     })
 
-    test('check the author with the most likes',()=> {
+    test('check the author with the most likes',async ()=> {
       expected = {
         author: "Edsger W. Dijkstra",
         likes: 17
       }
-      const result = listHelper.mostLikes(blogs)
+      const result = await listHelper.mostLikes(blogs)
       expect(result).toEqual(expected)
     })
 

@@ -4,20 +4,38 @@ const app = require('../app')
 const helper = require('./test_helper')
 const api = supertest(app)
 const Blog = require('../models/blog')
+const User = require('../models/user')
+
+
 
 
 beforeEach(async () => {
+  await User.deleteMany({})
   await Blog.deleteMany({})
 
-  for (let blog of helper.initialBlogs) {
-    let blogObject = new Blog(blog)
-    await blogObject.save()
+  for (let user of helper.initialUsers) {
+    await api.post('/api/users').send(user)
   }
+
+  const response = await api.post('/api/login').send(helper.userToToken)
+  const validUserToken = `bearer ${response.body.token}`
+
+  for (let blog of helper.initialBlogs) {
+
+    //let blogObject = new Blog(blog)
+    await api.post('/api/blogs').send(blog).set({ authorization: validUserToken })
+    //await blogObject.save()
+  }
+
+  //const usersAtEnd = await helper.usersInDb()
+  //console.log(usersAtEnd.find(x => x.username === 'matias'))
+  
+
 })
 
-const main = async () => {
 
 
+describe('Blog creation tests', () => {
 test('every blog in list is returned', async () => {
     const response = await api.get('/api/blogs')
     expect(response.body).toHaveLength(helper.initialBlogs.length)
@@ -29,9 +47,12 @@ test('id is called id', async () => {
     response.body.forEach(element => {
         expect(element.id).toBeDefined()
     });
-})
+},10000)
   
 test('a valid blog can be added', async () => {
+  const response = await api.post('/api/login').send(helper.userToToken)
+  const validUserToken = `bearer ${response.body.token}`
+
     const newBlog = {
         title : "20 cute puppies",
         author : "Rose Williams",
@@ -42,6 +63,7 @@ test('a valid blog can be added', async () => {
     await api
       .post('/api/blogs')
       .send(newBlog)
+      .set({ authorization: validUserToken })
       .expect(201)
       .expect('Content-Type', /application\/json/)
   
@@ -57,6 +79,8 @@ test('a valid blog can be added', async () => {
   })
 
 test('a blog without likes defaults to 0', async () => {
+    const response = await api.post('/api/login').send(helper.userToToken)
+    const validUserToken = `bearer ${response.body.token}`
     const newBlog = {
         title : "Theory on alien invasions",
         author : "Greg McDonald",
@@ -65,6 +89,7 @@ test('a blog without likes defaults to 0', async () => {
     await api
         .post('/api/blogs')
         .send(newBlog)
+        .set({ authorization: validUserToken })
         .expect(201)
 
     const blogsAtEnd = await helper.blogsInDb()
@@ -73,6 +98,8 @@ test('a blog without likes defaults to 0', async () => {
 })
 
 test('a blog without url', async () => {
+    const response = await api.post('/api/login').send(helper.userToToken)
+    const validUserToken = `bearer ${response.body.token}`
     const newBlog = {
         title : "My toughts on social media and why it's bad",
         author : "Iroh Nick",
@@ -81,9 +108,12 @@ test('a blog without url', async () => {
     await api
         .post('/api/blogs')
         .send(newBlog)
+        .set({ authorization: validUserToken })
         .expect(400)
 })
 test('a blog without title', async () => {
+    const response = await api.post('/api/login').send(helper.userToToken)
+    const validUserToken = `bearer ${response.body.token}`
     const newBlog = {
         author : "Danny DeVito",
         url: "www.mytotallyrealwebsite.com",
@@ -92,8 +122,24 @@ test('a blog without title', async () => {
     await api
         .post('/api/blogs')
         .send(newBlog)
+        .set({ authorization: validUserToken })
         .expect(400)
 })
+
+test('a blog is posted without token', async () => {
+    const newBlog = {
+        title : "20 cute puppies",
+        author : "Rose Williams",
+        url : "www.wix.com",
+        likes : 134
+    }
+  
+    await api
+      .post('/api/blogs')
+      .send(newBlog)
+      .expect(401)
+      .expect('Content-Type', /application\/json/)
+  })
 
 test('deleting a blog that doesnt exist', async () => {
   
@@ -106,7 +152,8 @@ test('deleting a blog that doesnt exist', async () => {
 })
 
 test('deleting a blog that does exist', async () => {
-
+  const response = await api.post('/api/login').send(helper.userToToken)
+  const validUserToken = `bearer ${response.body.token}`
   const newBlog = {
     title: "A blog that will be deleted",
     author : "Danny DeVito",
@@ -116,6 +163,7 @@ test('deleting a blog that does exist', async () => {
   await api
         .post('/api/blogs')
         .send(newBlog)
+        .set({ authorization: validUserToken })
 
   const blogsAtEnd = await helper.blogsInDb()
   const blogOnDB = blogsAtEnd.find(x => x.title === newBlog.title)
@@ -124,6 +172,7 @@ test('deleting a blog that does exist', async () => {
 
   await api
     .delete(`/api/blogs/${validId}`)
+    .set({authorization: validUserToken})
     .expect(204)
 })
 
@@ -145,6 +194,8 @@ test('updating a blog that doesnt exist', async () => {
 })
 
 test('updating a blog that does exist', async () => {
+  const response = await api.post('/api/login').send(helper.userToToken)
+  const validUserToken = `bearer ${response.body.token}`
   const newBlog = {
     title: "A blog that will be updated",
     author : "Danny DeVito",
@@ -155,6 +206,7 @@ test('updating a blog that does exist', async () => {
   await api
         .post('/api/blogs')
         .send(newBlog)
+        .set({authorization: validUserToken})
 
   const newInfo = {
     title: "A blog that has been updated",
@@ -171,6 +223,7 @@ test('updating a blog that does exist', async () => {
   await api
     .put(`/api/blogs/${validId}`)
     .send(newInfo)
+    
 
   const blogsAtEnd2 = await helper.blogsInDb()
   const updatedBlog = blogsAtEnd2.find(x => x.title === newInfo.title)
@@ -178,10 +231,29 @@ test('updating a blog that does exist', async () => {
   expect(updatedBlog).toBeDefined()
 })
 
+})
+
+describe('User creation tests', () => {
+  test('Trying to create a user with an invalid username', async () => {
+    const user = {username:"ma",
+    name:"MatiasMay",
+    password:"filho"}
+    await api.post('/api/users')
+      .send(user)
+      .expect(400)
+  })
+
+  test('Trying to create a user with a repeated username', async () => {
+    const user = {username:"matias",
+    name:"MatiasMay",
+    password:"filho"}
+    await api.post('/api/users')
+      .send(user)
+      .expect(400)
+  })
+
+})
+
 afterAll(async () => {
   await mongoose.connection.close()
 })
-
-}
-
-main()

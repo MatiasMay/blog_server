@@ -1,14 +1,14 @@
 const listHelper = require('../utils/list_helper')
 
 
-test('dummy returns one', async () => {
+test('dummy returns one', () => {
   const blogs = []
 
-  const result = await listHelper.dummy(blogs)
+  const result = listHelper.dummy(blogs)
   expect(result).toBe(1)
 })
 
-describe('total likes', async () => {
+describe('total likes', () => {
     const listWithOneBlog = [
       {
         _id: '5a422aa71b54a676234d17f8',

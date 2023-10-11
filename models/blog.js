@@ -1,7 +1,7 @@
 require('dotenv').config()
 const config = require('../utils/config')
 const mongoose = require('mongoose')
-
+//El esquema de blogs con atributos y que propiedades tienen los atributos
 const blogSchema = new mongoose.Schema({
   title: {
     type: String,
@@ -25,7 +25,7 @@ const blogSchema = new mongoose.Schema({
     ref: 'User'
   }
 })
-
+//Se borra el id y_v del blogSchema
 blogSchema.set('toJSON',{
     transform: (document,returnedObject)=>{
         returnedObject.id =returnedObject._id.toString()

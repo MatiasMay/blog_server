@@ -14,7 +14,7 @@ const app = express()
 
 
 app.use(cors())
-
+//Muestra mensajes con Mongoose acerca de si se pudo conectar o no al URI que se necesita
 mongoose.connect(config.MONGODB_URI)
   .then(() => {
     logger.info('connected to MongoDB')
@@ -22,20 +22,20 @@ mongoose.connect(config.MONGODB_URI)
   .catch((error) => {
     logger.error('error connecting to MongoDB:', error.message)
   })
-
+//Se utiliza express y los dos servicios para el logger y el extractor de tokens
 app.use(express.json())
 app.use(middleware.requestLogger)
 app.use(middleware.tokenExtractor)
-
+//Las 3 apis que manejan login, usuarios y blogs
 app.use('/api/login', loginRouter)
 app.use('/api/users', usersRouter)
 app.use('/api/blogs', middleware.userExtractor, blogsRouter)
-
+//Si el entorno es de testing entonces se pueden usar los comandos de testeo del controlado
 if (process.env.NODE_ENV === 'test') {
   const testingRouter = require('./controllers/testing')
   app.use('/api/testing', testingRouter)
 }
-
+//Se usan middlewares de unknownEndpoint y errorHandler por si hay errores
 app.use(middleware.unknownEndpoint)
 app.use(middleware.errorHandler)
 

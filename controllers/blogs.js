@@ -3,14 +3,14 @@ const Blog = require('../models/blog')
 //
 const User = require('../models/user')
 const jwt = require('jsonwebtoken')
-//
-
+//Todos los ruteos para el controlador de blogs
+//Conseguir blogs
 blogsRouter.get('/', async (request, response) => {
   const blogs = await Blog
   .find({}).populate('user', { username: 1, name: 1, id:1 })
   response.json(blogs)
   })
-  
+//Postear blogs y todo lo que implica checar  
 blogsRouter.post('/', async (request, response) => {
     const blog = new Blog(request.body)
     const user = request.user
@@ -23,7 +23,7 @@ blogsRouter.post('/', async (request, response) => {
     await user.save()
     response.status(201).json(savedBlog)
   })
-
+//Borrar blogs
   blogsRouter.delete('/:id', async (request, response) => {
     const user = request.user
     blogcheck = await Blog.findById(request.params.id)
@@ -36,7 +36,7 @@ blogsRouter.post('/', async (request, response) => {
     await Blog.findByIdAndRemove(request.params.id)
     response.status(204).end()
   })
-  
+//Actualizar un blog  
   blogsRouter.put('/:id', (request, response, next) => {
     const body = request.body
   
@@ -46,7 +46,7 @@ blogsRouter.post('/', async (request, response) => {
       url: body.url,
       likes: body.likes
   }
-  
+
     Blog.findByIdAndUpdate(request.params.id, blog, { new: true })
       .then(updatedBlog => {
         response.json(updatedBlog)
